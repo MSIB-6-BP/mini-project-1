@@ -44,7 +44,9 @@ function App() {
         ...(prev.length >= window - 1
           ? prev.slice(prev.length - (window - 1))
           : prev),
-        { ...buffWindow, time: new Date().toISOString() },
+        isOnline
+          ? { ...buffWindow, time: new Date().toISOString() }
+          : { time: new Date().toISOString(), co2: 0, hum: 0, sol: 0, temp: 0 },
       ]);
       setBuffWindow({
         co2: 0,
@@ -76,102 +78,115 @@ function App() {
     socket.on("disconnect", () => {
       setIsOnline(false);
     });
+    return () => {
+      socket.off("connect");
+      socket.off("message");
+      socket.off("stats");
+      socket.off("disconnect");
+      socket.disconnect();
+    };
   }, [socket]);
   return (
-    <main style={{ fontFamily: "sans-serif" }}>
-      <p style={{ fontWeight: "bold", color: isOnline ? "green" : "red" }}>
-        Status: {isOnline ? "online" : "offline"}
-      </p>
-      {activeSite && (
-        <p>
-          Active: {activeSite.name} | {activeSite.url}
-        </p>
-      )}
-      {statBuff.length > 0 && (
-        <p>
-          Date: {statBuff[0].time.split("T")[0]}
-          {statBuff[statBuff.length - 1].time.split("T")[0] ===
-          statBuff[0].time.split("T")[0]
-            ? ""
-            : ` - ${statBuff[statBuff.length - 1].time.split("T")[0]}`}
-        </p>
-      )}
-      <p>{message}</p>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          setSites((prev) => [...prev, { name: siteName, url: siteUrl }]);
-          localStorage.setItem(
-            "sites",
-            JSON.stringify([...sites, { name: siteName, url: siteUrl }])
-          );
-          setSiteName("");
-          setSiteUrl("");
+    <main
+      style={{
+        fontFamily: "sans-serif",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "1rem",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "0rem",
         }}
       >
-        <input
-          type="text"
-          value={siteName}
-          onChange={(t) => setSiteName(t.target.value)}
-        />
-        <input
-          type="text"
-          value={siteUrl}
-          onChange={(t) => setSiteUrl(t.target.value)}
-        />
-        <button type="submit">Add</button>
-      </form>
-      <div>
-        {sites.map((site, i) => {
-          return (
-            <button
-              key={i}
-              onClick={() => {
-                if (socket) {
-                  socket.disconnect();
-                  setSocket(null);
-                }
-                setSocket(io(site.url));
-                setActiveSite(site);
-              }}
-            >
-              {site.name}
-            </button>
-          );
-        })}
+        <p style={{ fontWeight: "bold", color: isOnline ? "green" : "red" }}>
+          Status: {isOnline ? "online" : "offline"}
+        </p>
+        {activeSite && (
+          <p>
+            Active: {activeSite.name} | {activeSite.url}
+          </p>
+        )}
+        {statBuff.length > 0 && (
+          <p>
+            Date: {statBuff[0].time.split("T")[0]}
+            {statBuff[statBuff.length - 1].time.split("T")[0] ===
+            statBuff[0].time.split("T")[0]
+              ? ""
+              : ` - ${statBuff[statBuff.length - 1].time.split("T")[0]}`}
+          </p>
+        )}
+        <p>{message}</p>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setSites((prev) => [...prev, { name: siteName, url: siteUrl }]);
+            localStorage.setItem(
+              "sites",
+              JSON.stringify([...sites, { name: siteName, url: siteUrl }])
+            );
+            setSiteName("");
+            setSiteUrl("");
+          }}
+        >
+          <input
+            type="text"
+            value={siteName}
+            onChange={(t) => setSiteName(t.target.value)}
+          />
+          <input
+            type="text"
+            value={siteUrl}
+            onChange={(t) => setSiteUrl(t.target.value)}
+          />
+          <button type="submit">Add</button>
+        </form>
+        <div>
+          {sites.map((site, i) => {
+            return (
+              <button
+                key={i}
+                onClick={() => {
+                  if (socket) {
+                    socket.disconnect();
+                    setSocket(null);
+                  }
+                  setStatBuff(
+                    Array(15).fill({
+                      time: new Date().toISOString(),
+                      co2: 0,
+                      hum: 0,
+                      sol: 0,
+                      temp: 0,
+                    })
+                  );
+                  setSocket(io(site.url));
+                  setActiveSite(site);
+                }}
+              >
+                {site.name}
+              </button>
+            );
+          })}
+        </div>
       </div>
-      <div style={{ display: "flex", gap: "1rem" }}>
+      <div style={{ display: "flex", gap: "1rem", width: "100%" }}>
         <Card title="CO2">
-          {(
-            statBuff.reduce((sum, stat) => {
-              return sum + stat.co2;
-            }, 0) / statBuff.length
-          ).toFixed(2)}{" "}
-          ppm
+          {statBuff[statBuff.length - 1].co2.toFixed(2)} ppm
         </Card>
         <Card title="Humidity">
-          {(
-            statBuff.reduce((sum, stat) => {
-              return sum + stat.hum;
-            }, 0) / statBuff.length
-          ).toFixed(2)}{" "}
-          g/m&sup3;
+          {statBuff[statBuff.length - 1].hum.toFixed(2)} g/m&sup3;
         </Card>
         <Card title="Solar Intensity">
-          {(
-            statBuff.reduce((sum, stat) => {
-              return sum + stat.sol;
-            }, 0) / statBuff.length
-          ).toFixed(2)}{" "}
-          W/m&sup2;
+          {statBuff[statBuff.length - 1].sol.toFixed(2)} W/m&sup2;
         </Card>
         <Card title="Temperature">
-          {(
-            statBuff.reduce((sum, stat) => {
-              return sum + stat.temp;
-            }, 0) / statBuff.length
-          ).toFixed(2)}{" "}
-          &deg;C
+          {statBuff[statBuff.length - 1].temp.toFixed(2)} &deg;C
         </Card>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", width: "100%" }}>
