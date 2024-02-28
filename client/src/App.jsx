@@ -8,6 +8,12 @@ function App() {
   const [message, setMessage] = useState("");
   const [isOnline, setIsOnline] = useState(false);
   const [socket, setSocket] = useState(null);
+  const [buffWindow, setBuffWindow] = useState({
+    co2: 0,
+    hum: 0,
+    sol: 0,
+    temp: 0,
+  });
   const [statBuff, setStatBuff] = useState([]);
   const [sites, setSites] = useState([]);
 
@@ -16,12 +22,30 @@ function App() {
   const [activeSite, setActiveSite] = useState(null);
 
   const window = 15;
+  const windowTime = 5000;
 
   useEffect(() => {
-    // setSocket(io("http://localhost:3000"));
     const localSites = JSON.parse(localStorage.getItem("sites"));
     setSites(localSites || []);
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStatBuff((prev) => [
+        ...(prev.length >= window - 1
+          ? prev.slice(prev.length - (window - 1))
+          : prev),
+        { ...buffWindow, time: new Date().toISOString() },
+      ]);
+      setBuffWindow({
+        co2: 0,
+        hum: 0,
+        sol: 0,
+        temp: 0,
+      });
+    }, windowTime);
+    return () => clearInterval(interval);
+  }, [buffWindow, statBuff]);
 
   useEffect(() => {
     if (!socket) return;
@@ -31,16 +55,14 @@ function App() {
     socket.on("message", (data) => {
       setMessage(data);
     });
-    socket.on("stats-history", (data) => {
-      setStatBuff(data);
-    });
     socket.on("stats", (data) => {
-      setStatBuff((prev) => [
-        ...(prev.length >= window - 1
-          ? prev.slice(prev.length - (window - 1))
-          : prev),
-        data,
-      ]);
+      setBuffWindow((prev) => {
+        prev.co2 = (prev.co2 + data.co2) / 2;
+        prev.hum = (prev.hum + data.hum) / 2;
+        prev.sol = (prev.sol + data.sol) / 2;
+        prev.temp = (prev.temp + data.temp) / 2;
+        return prev;
+      });
     });
     socket.on("disconnect", () => {
       setIsOnline(false);

@@ -21,7 +21,7 @@ ChartJS.register(
   LineElement
 );
 
-export default function Chart({ statBuff, label, take }) {
+export default function Chart({ statBuff, label, take, max }) {
   return (
     <div style={{display: "flex", width: "50%"}}>
       <Line
@@ -32,7 +32,7 @@ export default function Chart({ statBuff, label, take }) {
           scales: {
             y: {
               beginAtZero: true,
-              max: 100,
+              max: max || 100,
             },
           },
         }}
