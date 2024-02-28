@@ -128,7 +128,7 @@ function App() {
           onSubmit={(e) => {
             e.preventDefault();
             if (socket) {
-              socket.emit("message", "");
+              socket.emit("message", inputMessage);
               setInputMessage("");
             }
           }}
