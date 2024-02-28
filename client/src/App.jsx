@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import { io } from "socket.io-client";
 
+import Card from "./components/Card";
 import Chart from "./components/Chart";
 
 function App() {
@@ -14,7 +15,15 @@ function App() {
     sol: 0,
     temp: 0,
   });
-  const [statBuff, setStatBuff] = useState([]);
+  const [statBuff, setStatBuff] = useState(
+    Array(15).fill({
+      time: new Date().toISOString(),
+      co2: 0,
+      hum: 0,
+      sol: 0,
+      temp: 0,
+    })
+  );
   const [sites, setSites] = useState([]);
 
   const [siteName, setSiteName] = useState("");
@@ -132,42 +141,38 @@ function App() {
         })}
       </div>
       <div style={{ display: "flex", gap: "1rem" }}>
-        <p>
-          CO2 Avg:{" "}
+        <Card title="CO2">
           {(
             statBuff.reduce((sum, stat) => {
               return sum + stat.co2;
             }, 0) / statBuff.length
           ).toFixed(2)}{" "}
           ppm
-        </p>
-        <p>
-          Humidity Avg:{" "}
+        </Card>
+        <Card title="Humidity">
           {(
             statBuff.reduce((sum, stat) => {
               return sum + stat.hum;
             }, 0) / statBuff.length
           ).toFixed(2)}{" "}
-          g/m3
-        </p>
-        <p>
-          Solar Intensity Avg:{" "}
+          g/m&sup3;
+        </Card>
+        <Card title="Solar Intensity">
           {(
             statBuff.reduce((sum, stat) => {
               return sum + stat.sol;
             }, 0) / statBuff.length
           ).toFixed(2)}{" "}
-          W/m2
-        </p>
-        <p>
-          Temperature Avg:{" "}
+          W/m&sup2;
+        </Card>
+        <Card title="Temperature">
           {(
             statBuff.reduce((sum, stat) => {
               return sum + stat.temp;
             }, 0) / statBuff.length
           ).toFixed(2)}{" "}
-          C
-        </p>
+          &deg;C
+        </Card>
       </div>
       <div style={{ display: "flex", flexWrap: "wrap", width: "100%" }}>
         <Chart statBuff={statBuff} label="CO2" take="co2" />
