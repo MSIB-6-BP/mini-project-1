@@ -56,7 +56,7 @@ function App() {
       });
     }, windowTime);
     return () => clearInterval(interval);
-  }, [buffWindow, statBuff]);
+  }, [buffWindow, statBuff, isOnline]);
 
   useEffect(() => {
     if (!socket) return;
@@ -68,10 +68,10 @@ function App() {
     });
     socket.on("stats", (data) => {
       setBuffWindow((prev) => {
-        prev.co2 = (prev.co2 + data.co2) / 2;
-        prev.hum = (prev.hum + data.hum) / 2;
-        prev.sol = (prev.sol + data.sol) / 2;
-        prev.temp = (prev.temp + data.temp) / 2;
+        prev.co2 = (prev.co2 + (data.co2 || 0)) / 2;
+        prev.hum = (prev.hum + (data.hum || 0)) / 2;
+        prev.sol = (prev.sol + (data.sol || 0)) / 2;
+        prev.temp = (prev.temp + (data.temp || 0)) / 2;
         return prev;
       });
     });
