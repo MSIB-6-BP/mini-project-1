@@ -15,7 +15,17 @@ const windowTime = 2500;
 app.use(cors());
 
 io.on("connection", (ws) => {
-  ws.emit("message", "Welcome to Greenhouse monitoring!");
+  ws.on("message", (message) => {
+    ws.emit("message", {
+      type: "info",
+      content: "Message received",
+    });
+  });
+
+  ws.emit("message", {
+    type: "info",
+    content: "Welcome to the server",
+  });
   ws.emit(
     "stats-history",
     Array(10)

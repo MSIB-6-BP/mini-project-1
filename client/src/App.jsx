@@ -6,7 +6,7 @@ import Card from "./components/Card";
 import Chart from "./components/Chart";
 
 function App() {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState({ type: "", content: "" });
   const [isOnline, setIsOnline] = useState(false);
   const [socket, setSocket] = useState(null);
   const [buffWindow, setBuffWindow] = useState({
@@ -29,6 +29,8 @@ function App() {
   const [siteName, setSiteName] = useState("");
   const [siteUrl, setSiteUrl] = useState("");
   const [activeSite, setActiveSite] = useState(null);
+
+  const [inputMessage, setInputMessage] = useState("");
 
   const window = 15;
   const windowTime = 5000;
@@ -121,7 +123,23 @@ function App() {
               : ` - ${statBuff[statBuff.length - 1].time.split("T")[0]}`}
           </p>
         )}
-        <p>{message}</p>
+        <p>{message.content}</p>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (socket) {
+              socket.emit("message", "");
+              setInputMessage("");
+            }
+          }}
+        >
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+          />
+          <button type="submit">Send</button>
+        </form>
         <form
           onSubmit={(e) => {
             e.preventDefault();
