@@ -42,7 +42,7 @@ function getHumidity() {
   return clamp(
     humidityState + 100,
     Math.random() * 10,
-    50 + Math.random() * 50
+    50 + Math.random() * 50,
   );
 }
 
@@ -77,5 +77,5 @@ module.exports = {
   getAC,
   getTemperature,
   turnAC,
-  getCO2
+  getCO2,
 };

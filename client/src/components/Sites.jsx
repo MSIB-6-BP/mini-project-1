@@ -18,7 +18,7 @@ export default function Sites({
     setSites((prev) => [...prev, { name: siteName, url: siteUrl }]);
     localStorage.setItem(
       "sites",
-      JSON.stringify([...sites, { name: siteName, url: siteUrl }])
+      JSON.stringify([...sites, { name: siteName, url: siteUrl }]),
     );
     setSiteName("");
     setSiteUrl("");
@@ -28,7 +28,7 @@ export default function Sites({
     setSites((prev) => prev.filter((s) => s !== site));
     localStorage.setItem(
       "sites",
-      JSON.stringify(sites.filter((s) => s !== site))
+      JSON.stringify(sites.filter((s) => s !== site)),
     );
   };
 
@@ -44,7 +44,7 @@ export default function Sites({
         hum: 0,
         sol: 0,
         temp: 0,
-      })
+      }),
     );
     setSocket(io(site.url));
     setActiveSite(site);

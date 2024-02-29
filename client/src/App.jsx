@@ -23,7 +23,7 @@ function App() {
   useEffect(() => {
     const interval = setInterval(
       pushStat(setStatBuff, isOnline, buffWindow, setBuffWindow, window),
-      windowTime
+      windowTime,
     );
     return () => clearInterval(interval);
   }, [buffWindow, statBuff, isOnline]);

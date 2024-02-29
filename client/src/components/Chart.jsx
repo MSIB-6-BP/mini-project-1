@@ -18,7 +18,7 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   PointElement,
-  LineElement
+  LineElement,
 );
 
 export default function Chart({ statBuff, label, take, max }) {
