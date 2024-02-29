@@ -12,14 +12,14 @@ module.exports = (ws) => (message) => {
     toggleHumidifier();
     ws.emit("message", {
       type: "info",
-      content: `Humidifier is now ${humidifierStatus() ? "on" : "off"}`,
+      content: `humidifier is now ${humidifierStatus() ? "on" : "off"}`,
     });
   }
   if (message === "toggle shader") {
     toggleShader();
     ws.emit("message", {
       type: "info",
-      content: `Shader is now ${shaderStatus() ? "on" : "off"}`,
+      content: `shader is now ${shaderStatus() ? "closed" : "opened"}`,
     });
   }
   if (message.match(/set ac \d+/)) {
@@ -27,17 +27,15 @@ module.exports = (ws) => (message) => {
     turnAC(temp);
     ws.emit("message", {
       type: "info",
-      content: `AC is now set to ${getAC()}°C`,
+      content: `ac is now set to ${getAC()}°C`,
     });
   }
   if (message === "get status") {
     ws.emit("message", {
       type: "info",
-      content: `Humidifier is ${
-        humidifierStatus() ? "on" : "off"
-      } | Shader is ${
+      content: `humidifier:${humidifierStatus() ? "on" : "off"}|shader:${
         shaderStatus() ? "closed" : "opened"
-      } | AC is set to ${getAC()}°C`,
+      }|ac:${getAC()}°C`,
     });
   }
 };
