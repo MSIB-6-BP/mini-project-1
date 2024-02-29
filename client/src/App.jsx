@@ -1,85 +1,37 @@
 import { useEffect, useState } from "react";
-import "./App.css";
-import { io } from "socket.io-client";
 
 import Card from "./components/Card";
 import Chart from "./components/Chart";
+import Interactor from "./components/Interactor";
+import Sites from "./components/Sites";
+
+import { handleConnect, handleDisconnect, handleStats } from "./helpers/Socket";
+import { pushStat } from "./helpers/Analitycs";
+import { buffWindowDefault, statBuffDefault } from "./helpers/Constants";
 
 function App() {
-  const [message, setMessage] = useState({ type: "", content: "" });
+  const [activeSite, setActiveSite] = useState(null);
   const [isOnline, setIsOnline] = useState(false);
   const [socket, setSocket] = useState(null);
-  const [buffWindow, setBuffWindow] = useState({
-    co2: 0,
-    hum: 0,
-    sol: 0,
-    temp: 0,
-  });
-  const [statBuff, setStatBuff] = useState(
-    Array(15).fill({
-      time: new Date().toISOString(),
-      co2: 0,
-      hum: 0,
-      sol: 0,
-      temp: 0,
-    })
-  );
-  const [sites, setSites] = useState([]);
-
-  const [siteName, setSiteName] = useState("");
-  const [siteUrl, setSiteUrl] = useState("");
-  const [activeSite, setActiveSite] = useState(null);
-
-  const [inputMessage, setInputMessage] = useState("");
+  const [buffWindow, setBuffWindow] = useState(buffWindowDefault);
+  const [statBuff, setStatBuff] = useState(statBuffDefault(15));
 
   const window = 15;
   const windowTime = 5000;
 
   useEffect(() => {
-    const localSites = JSON.parse(localStorage.getItem("sites"));
-    setSites(localSites || []);
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStatBuff((prev) => [
-        ...(prev.length >= window - 1
-          ? prev.slice(prev.length - (window - 1))
-          : prev),
-        isOnline
-          ? { ...buffWindow, time: new Date().toISOString() }
-          : { time: new Date().toISOString(), co2: 0, hum: 0, sol: 0, temp: 0 },
-      ]);
-      setBuffWindow({
-        co2: 0,
-        hum: 0,
-        sol: 0,
-        temp: 0,
-      });
-    }, windowTime);
+    const interval = setInterval(
+      pushStat(setStatBuff, isOnline, buffWindow, setBuffWindow, window),
+      windowTime
+    );
     return () => clearInterval(interval);
   }, [buffWindow, statBuff, isOnline]);
 
   useEffect(() => {
     if (!socket) return;
-    socket.on("connect", () => {
-      setIsOnline(true);
-    });
-    socket.on("message", (data) => {
-      setMessage(data);
-    });
-    socket.on("stats", (data) => {
-      setBuffWindow((prev) => {
-        prev.co2 = (prev.co2 + (data.co2 || 0)) / 2;
-        prev.hum = (prev.hum + (data.hum || 0)) / 2;
-        prev.sol = (prev.sol + (data.sol || 0)) / 2;
-        prev.temp = (prev.temp + (data.temp || 0)) / 2;
-        return prev;
-      });
-    });
-    socket.on("disconnect", () => {
-      setIsOnline(false);
-    });
+    socket.on("connect", handleConnect(setIsOnline));
+    socket.on("stats", handleStats(setBuffWindow));
+    socket.on("disconnect", handleDisconnect(setIsOnline));
     return () => {
       socket.off("connect");
       socket.off("message");
@@ -109,89 +61,17 @@ function App() {
         <p style={{ fontWeight: "bold", color: isOnline ? "green" : "red" }}>
           Status: {isOnline ? "online" : "offline"}
         </p>
-        {activeSite && (
-          <p>
-            Active: {activeSite.name} | {activeSite.url}
-          </p>
-        )}
-        {statBuff.length > 0 && (
-          <p>
-            Date: {statBuff[0].time.split("T")[0]}
-            {statBuff[statBuff.length - 1].time.split("T")[0] ===
-            statBuff[0].time.split("T")[0]
-              ? ""
-              : ` - ${statBuff[statBuff.length - 1].time.split("T")[0]}`}
-          </p>
-        )}
-        <p>{message.content}</p>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (socket) {
-              socket.emit("message", inputMessage);
-              setInputMessage("");
-            }
-          }}
-        >
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-          />
-          <button type="submit">Send</button>
-        </form>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            setSites((prev) => [...prev, { name: siteName, url: siteUrl }]);
-            localStorage.setItem(
-              "sites",
-              JSON.stringify([...sites, { name: siteName, url: siteUrl }])
-            );
-            setSiteName("");
-            setSiteUrl("");
-          }}
-        >
-          <input
-            type="text"
-            value={siteName}
-            onChange={(t) => setSiteName(t.target.value)}
-          />
-          <input
-            type="text"
-            value={siteUrl}
-            onChange={(t) => setSiteUrl(t.target.value)}
-          />
-          <button type="submit">Add</button>
-        </form>
-        <div>
-          {sites.map((site, i) => {
-            return (
-              <button
-                key={i}
-                onClick={() => {
-                  if (socket) {
-                    socket.disconnect();
-                    setSocket(null);
-                  }
-                  setStatBuff(
-                    Array(15).fill({
-                      time: new Date().toISOString(),
-                      co2: 0,
-                      hum: 0,
-                      sol: 0,
-                      temp: 0,
-                    })
-                  );
-                  setSocket(io(site.url));
-                  setActiveSite(site);
-                }}
-              >
-                {site.name}
-              </button>
-            );
-          })}
-        </div>
+        <p>
+          Active:{" "}
+          {activeSite ? `${activeSite.name} | ${activeSite.url}` : "none"}
+        </p>
+        <Interactor socket={socket} />
+        <Sites
+          socket={socket}
+          setSocket={setSocket}
+          setActiveSite={setActiveSite}
+          setStatBuff={setStatBuff}
+        />
       </div>
       <div style={{ display: "flex", gap: "1rem", width: "100%" }}>
         <Card title="CO2">
