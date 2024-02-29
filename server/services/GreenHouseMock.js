@@ -48,9 +48,9 @@ function getHumidity() {
 
 function getSolar() {
   if (!shader) {
-    shaderState += Math.random() * 20;
+    shaderState += Math.random() * 40;
   } else {
-    shaderState -= Math.random() * 10;
+    shaderState -= Math.random() * 50;
   }
   return clamp(shaderState + 70, Math.random() * 10, 50 + Math.random() * 50);
 }

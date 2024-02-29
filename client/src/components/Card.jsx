@@ -1,20 +1,8 @@
 /* eslint-disable react/prop-types */
 export default function Card({ title, children }) {
   return (
-    <div
-      className="card"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "0.5rem",
-        width: "25%",
-        backgroundColor: "#eee",
-        padding: "1rem",
-      }}
-    >
-      <h2 style={{ textAlign: "center", margin: 0 }}>{title}</h2>
+    <div className="flex flex-col items-center justify-between gap-2 w-1/4 bg-gray-200 p-4">
+      <h2 className="text-center font-semibold text-xl">{title}</h2>
       {children}
     </div>
   );

@@ -23,7 +23,7 @@ ChartJS.register(
 
 export default function Chart({ statBuff, label, take, max }) {
   return (
-    <div style={{display: "flex", width: "50%"}}>
+    <div className="flex w-1/2">
       <Line
         width={100}
         height={40}

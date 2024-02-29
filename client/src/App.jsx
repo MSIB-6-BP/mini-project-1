@@ -8,6 +8,7 @@ import Sites from "./components/Sites";
 import { handleConnect, handleDisconnect, handleStats } from "./helpers/Socket";
 import { pushStat } from "./helpers/Analitycs";
 import { buffWindowDefault, statBuffDefault } from "./helpers/Constants";
+import Indicator from "./components/Indicator";
 
 function App() {
   const [activeSite, setActiveSite] = useState(null);
@@ -41,37 +42,18 @@ function App() {
     };
   }, [socket]);
   return (
-    <main
-      style={{
-        fontFamily: "sans-serif",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "1rem",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "0rem",
-        }}
-      >
-        <p style={{ fontWeight: "bold", color: isOnline ? "green" : "red" }}>
-          Status: {isOnline ? "online" : "offline"}
-        </p>
-        <p>
-          Active:{" "}
-          {activeSite ? `${activeSite.name} | ${activeSite.url}` : "none"}
-        </p>
-        <Interactor socket={socket} />
-        <Sites
-          socket={socket}
-          setSocket={setSocket}
-          setActiveSite={setActiveSite}
-          setStatBuff={setStatBuff}
-        />
+    <main className="px-4 py-2 flex flex-col gap-2">
+      <div className="flex gap-2">
+        <div className="w-1/2 flex flex-col gap-2">
+          <Indicator isOnline={isOnline} activeSite={activeSite} />
+          <Sites
+            socket={socket}
+            setSocket={setSocket}
+            setActiveSite={setActiveSite}
+            setStatBuff={setStatBuff}
+          />
+        </div>
+        <Interactor className="w-1/2" socket={socket} />
       </div>
       <div style={{ display: "flex", gap: "1rem", width: "100%" }}>
         <Card title="CO2">
